@@ -63,8 +63,8 @@ promise.then(onFulfilled, onRejected)
 ```
 promise2 = promise1.then(onFulfilled, onRejected);
 ```
- 1. 如果 `onFulfilled` 或 `onRejected` 返回了值 x，则运行 Promise 解析过程 `[[Resolve]](promise2, x)`。
- 2. 如果 `onFulfilled` 或 `onRejected` 抛出了异常 e，则 `promise2` 应当以 e 为 reason 被拒绝。
+ 1. 如果 `onFulfilled` 或 `onRejected` 返回了值 `x`，则运行 Promise 解析过程 `[[Resolve]](promise2, x)`。
+ 2. 如果 `onFulfilled` 或 `onRejected` 抛出了异常 `e`，则 `promise2` 应当以 `e` 为 reason 被拒绝。
  3. 如果 `onFulfilled` 不是一个函数并且 `promise1` 已经 fulfilled，`promise2` 必须被用 `promise1` 同样的 value fulfilled。
  4. 如果 `onRejected ` 不是一个函数并且 `promise1` 已经 rejected，`promise2` 必须被用 `promise1` 同样的 value rejected。
 
