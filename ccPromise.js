@@ -60,7 +60,7 @@
         } else {
             // 针对非异步的代码
             let resolver = this.state === fulfilled ? onFulfilled : onRejected
-            unwrap(promise, resolver, this.outcome);
+            unwrap(promise, resolver, this.outcome)
         }
 
         return promise
@@ -121,14 +121,26 @@
         if (value === self) {
             handlers.reject(promise, new TypeError('Cannot resolve promise with itself'))
         }
-        self.state = fulfilled
-        self.out = value
-        let i = -1;
-        let len = self.queue.length
-        // 取出当前 promise 的回调，并且执行，执行的结果关系到下一个 promise 的状态和结果
-        while (++i < len) {
-            self.queue[i].callFulfilled(value)
+        let result = tryCatch(getThen, value)
+        if (result.status === 'error') {
+            handlers.reject(self, result.value)
         }
+
+        // 如果 value 是一个 thenable 对象,那么就把它当做 promise 执行。
+        var thenable = result.value
+        if (thenable) {
+            runOnce(self, thenable)
+        } else {
+            self.state = fulfilled
+            self.out = value
+            let i = -1;
+            let len = self.queue.length
+            // 取出当前 promise 的回调，并且执行，执行的结果关系到下一个 promise 的状态和结果
+            while (++i < len) {
+                self.queue[i].callFulfilled(value)
+            }
+        }
+
         return self
     }
 
@@ -149,7 +161,7 @@
     function runOnce(self, func) {
         let called = false;
 
-        function reject(error) {
+        function onSuccess(error) {
             if (called) {
                 return
             }
@@ -157,7 +169,7 @@
             handlers.reject(self, error)
         }
 
-        function resolve(value) {
+        function onError(value) {
             if (called) {
                 return
             }
@@ -166,12 +178,15 @@
         }
 
         function tryToUnwrap() {
-            func(resolve, reject)
+            func(onSuccess, onError)
         }
 
+        // 当这个 promise 是 onFulfilled 返回或者 resolve 内创建
+        // 那么此时会在上一个 promise resolve 时调用这个 promise 的 then
+        // 并且在完成后执行回调，这里设置的回调注册的实际上是修改上一个 promise 的状态。
         let result = tryCatch(tryToUnwrap)
         if (result.status === 'error') {
-            reject(result.value)
+            onError(result.value)
         }
     }
 
@@ -185,6 +200,17 @@
             out.status = 'error'
         }
         return out
+    }
+
+    // 防止 obj.then 被修改或者重复访问
+    function getThen(obj) {
+        // Make sure we only access the accessor once as required by the spec
+        var then = obj && obj.then
+        if (obj && typeof obj === 'object' && typeof then === 'function') {
+            return function appyThen() {
+                then.apply(obj, arguments)
+            }
+        }
     }
 
     Promise.resolve = function (value) {

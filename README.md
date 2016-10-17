@@ -1,6 +1,6 @@
 ## Promise/A+ 规范翻译
 
-> 参考 [lie](https://github.com/calvinmetcalf/lie) 实现了一个简化版的 [Promise](./ccPromise.js)，主要去掉了对于 `[[Resolve]](promise, x)` 中 `x` 为 thenable 的情况。
+> 参考 [lie](https://github.com/calvinmetcalf/lie) 实现了一个简化版的 [Promise](./ccPromise.js)。
 
 一个 promise 对象代表了一个异步操作的最终结果。我们主要通过 `then` 方法来跟 promise 对象打交道，这里讲的 `then` 方法可以注册两个回调，第一个回调接收异步操作的最终结果，第二个回调接收无法 promise 对象转变为 fulfilled 状态的原因。
 
